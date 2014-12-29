@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>INF133: Android Sensor App, Option 1</title>
+	<style>
+		.container {
+			margin-left: auto;
+			margin-right: auto;
+			width: 900px;
+			padding-bottom: 200px;
+		}
+	</style>
+</head>
+
+<body>
+<div class="container">
+<h1>Informatics 133</h1>
+<h1>Android Sensor App Option 1</h1>
+<p><a href="http://www.ics.uci.edu/~djp3/classes/2014_09_INF133/tasks/task_android.html">Assignment Page</a></p>
+
+<h1>Group Members</h1>
+<ol><li>Richard Vong 65674401</li></ol>
+<p>Work done: all parts of the app.</p>
+
+<h1>Components of the System</h1>
+<p>
+The components of the system are the Android device itself and the application.
+The Android device needs to have some way of determining its orientation from its onboard sensors, this is done with the accelerometer and magnetic sensor. Some smartphones may not have a magnetic sensor or gyroscope, this is common with low cost devices.
+</p>
+<p>
+The main components of the application are the activity Java file for functionality, activity XML file for defining the UI, sound files placed in the /raw/ folder, and the strings.xml file where UI strings are defined.
+</p>
+<p>
+In MainActivity.java, the functionality of the application is implemented. This involves using API functionality such as SensorManager and SensorEventListener to get sensor data from the accelerometer and magnetic field sensor. Audio is played on the device using the MediaPlayer control and openRawResourceFd() as shown in the assignment's video instruction.
+</p>
+<p>
+The orientation of the device determined by using SensorManager.getRotationMatrix() and SensorManager.getOrientation(). Data from both accelerometer and magnetometer are combined. The code to do this was derived from online examples that are been linked to on this page in the Resources section. SensorManger.getOrientation() returns three values, index 0 is the azimuth, index 1 is the pitch, and index 2 is the roll. Azimuth, pitch, and roll are illustrated in the picture displayed in the Resources section on this page. The values returned are in radians as described in the Android Sensor API documentation, they are converted to degree using Math.toDegrees(). These values are formatted and displayed in the UpdateUI() method. Once the values are received, they are evaluated to determine the device orientation. Only pitch and roll are used to determine orientation. I figured out which values correspond to which orientation by repeatedly re-orienting the device and recording which values (intervals for pitch and roll) correspond to each orientation.</p>
+<p>
+Events are registered using SensorManager.registerListener(). This uses the observer pattern as described in class. Sensor delay is set to normal because there isn't really any benefit for getting the values faster for this application. UI updates are done in its own thread using the Runnable interface as described in the assignment video(s).
+</p>
+<p>The sensor values for accelerometer and magnetometer are copied into member variables using System.arraycopy(). getRotationMatrix() accepts parameters the variable to store rotation matrix R, var to store inclination matrix I, and set of values gravity (vector) and geomagnetic values (vector). R is the identity matrix when the device is aligned with the world's coordinate system. X axis points East, Y points to North Pole, and device faces the sky. We do not need I, so it is null. A 3x3 matrix is stored in the variable for rotation matrix R. getOrientation() accepts the rotation matrix as a parameter as well as a variable parameter to store the Azimuth, Pitch, and Roll values.
+</p>
+<p>
+This usea a 3-axis accelerometer and 3-axis magnetometer. The accelerometer measures earth's gravity (which way is down/towards the center of the earth?). The mangnetometer measures earth's magnetic field (where is magnetic north?). Both gravity and geomagnetic data are combined to calculate orientation. Further details and mathematics/equations can be seen in <em>Implementing a Tilt-Compensated
+eCompass using Accelerometer and
+Magnetometer Sensors</em> in the resources section of this page.
+</p>
+
+<h1>Challenges</h1>
+<p>
+The main challenges I encountered in this project was setting the Android development environment up. Initially, I tried running things without adding anything additional in the SDK Manager. Because ADT only came with the Android 4.4w, for wearables, I ran into some odd issues creating the interface (main activity xml) that I didn't really understand why they were happening. This was fixed by downloading SDK for Android 4.4.2. Before I figured out the 4.4w problem, I attempted to update/install many things in the Android SDK Manager. Because it was taking too long to install, I clicked abort. ADT started without any issues and the SDK Manager did not report any errors, but there was a problem. When trying to run the app on my device, the console would say that everything went OK and the APK was installed, but contrary to that, the app did not run on the device and did not show up in the applications list despite many attempts. To fix this, I ended up deleting the SDK files which involved hunting down what process/service was using the SDK files (ended up being Intel HAXM) and re-extracting ADT, starting from new.
+</p>
+<p>The second significant challenge I faced was figuring out how to determine the device's orientation. From what I have read, it doesn't seem like one can determine the device's orientation from the magnetometer alone. Then, by way of Googling, I found some resources that show how to determine orientation by combining two sensors, the Accelerometer and the Magnetometer. Then, by some linear algebra that I have since forgotten (or never really understood), we get the device's orientation in radians. Then, I use Math.toDegrees to convert to degrees because they seem easier to work with.</p>
+<h1>Resources used</h1>
+<ul>
+	<li>Android sensor documentation: <br>http://developer.android.com/reference/android/hardware/SensorManager.html#getOrientation(float[], float[])</li>
+	<li>How to get orientation: <br>http://stackoverflow.com/questions/10291322/what-is-the-alternative-to-android-orientation-sensor</li>
+	<li>Using sensor to create compass app: <br>http://www.techrepublic.com/article/pro-tip-create-your-own-magnetic-compass-using-androids-internal-sensors/</li>
+	<li>Implementing a Tilt-Compensated
+eCompass using Accelerometer and
+Magnetometer Sensors by Talat Ozyagcilar, Freescale Semiconductor: <br>http://cache.freescale.com/files/sensors/doc/app_note/AN4248.pdf</li>
+</ul>
+<img src="orientation.jpg">
+
+<h1>Video</h1>
+<p>
+	Link to video: <a href="http://youtu.be/5QQ3qytVpvM">http://youtu.be/5QQ3qytVpvM</a>
+</p>
+
+<h1>Source Code</h1>
+<p>
+	Link to source code: <a href="INF133_AndroidSensorApp.zip">INF133_AndroidSensorApp.zip</a>
+</p>
+
+</div>
+
+</body>
+</html>

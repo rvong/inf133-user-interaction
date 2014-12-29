@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">INF133</string>
+    <string name="light_label">The light sensor value is </string>
+    <string name="action_settings">Settings</string>
+    <string name="azimuth_label">Azimuth</string>
+    <string name="pitch_label">Pitch</string>
+    <string name="roll_label">Roll</string>
+    <string name="orientation_label">Orientation:</string>
+    <string name="orientation_label_default">Unknown</string>
+
+</resources>

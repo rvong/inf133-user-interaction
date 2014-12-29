@@ -1,0 +1,610 @@
+<!--
+http://www.ics.uci.edu/~djp3/classes/2014_09_INF133/tasks/task_realtimeweb.html
+http://mashable.com/2013/09/19/instagram-api-uses/
+http://instagram.com/developer/
+http://www.weather.com/weather/today/Agoura+Hills+CA+USCA0005
+http://api.openweathermap.org/data/2.5/find?lat=33.7408&lon=-117.8814&cnt=10&mode=xml&units=imperial
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="INF133 Real-time Map assignment.">
+    <meta name="author" content="Richard Vong 65674401">
+    <title>Informatics 133: Real-Time Map</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		body {
+			position: relative;
+			font-family: Helvetica, "Segoe UI", sans-serif;
+		}
+
+		.ajax-data {
+			width: 100%;
+			height: 500px;
+			font-family: consolas, lucida console, monospace;
+			font-size: 0.7em;
+		}
+		
+		.results {
+			height: 600px;
+			overflow: auto;
+		}
+		
+		.results > .row {
+			border-top: 6px solid #fafafa;
+			margin: 0.5em;
+			margin-top: 1em;
+		}
+		
+		/* Sets the anchors at an offset so that #anchor links goes to
+			an acceptable position. This is compensation for the space
+			taken by the fixed navbar */
+		a.anchor {
+			display: block;
+			position: relative;
+			top: -150px;
+			visbility: hidden;
+		}
+		
+		.footer {
+			margin-top: 10em;
+			padding: 0.4em;
+			padding-left: 1em;
+			border-top: 1px solid #ddd;
+		}
+
+		#map-canvas {
+			width: 100%;
+			min-height: 700px;
+			background-color: #ccc;
+		}
+
+		#map-locations {
+			height: 700px;
+			overflow: auto;
+		}
+		
+		.map-iw {
+			height: 300px;
+			overflow: none;
+		}
+		
+		.map-iw > iframe {
+			height: 85%;
+			border: none;
+			overflow: none;
+		}
+	</style>
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="//oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="//oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body data-spy="scroll" data-target=".navbar">
+	<a class="anchor" id="home"></a>
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Real-Time Map</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li class="active"><a href="#home">Home</a></li>
+			<li><a href="#description">Description</a></li>
+            <li><a href="#sources">5 Data Sources</a></li>
+			<li><a href="#parse">Data Parsing</a></li>
+            <li><a href="#retrieved-data">Retrieved Data</a></li>
+            <li><a href="#ajax">Dynamic AJAX Data</a></li>
+            <li><a href="#map">Best Buy Map</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+		<div class="jumbotron">
+			<h1>Real-Time Map</h1>
+			<p class="lead">Informatics 133 real-time map assignment due November 21, 2014</p>
+			<p><a href="http://www.ics.uci.edu/~djp3/classes/2014_09_INF133/tasks/task_realtimemap.html">Assignment Page</a></p>
+		</div>
+		
+		<div class="col-md-12">
+			<a class="anchor" id="description"></a>
+			<h1>Description</h1>
+			<h2>Real-Time Web Description</h2>
+			<p>The three data sources used are the Bloom API, Open Weather Map API, and the Best Buy Stores API. The feeds are retrieved using the provided PHP proxy/curl with the Bloom API and the Open Weather Map API. The Bloom API is requested in JSON format. The Open Weather Map API is requested in XML format. The Best Buy Stores API supports JSONP callbacks and thus is retrieved using JSONP without using the proxy.</p>
+			<p>The data is formatted and displayed in the <a href="#retrieved-data">Retrieved Data</a> section of this page. There are three tabs and corresponding tab panels/content areas where the data is grouped in. Clicking each tab will display the respective data. Unformatted text/raw data is provided in the <a href="#ajax">Dynamic AJAX Data</a> section of this page. The data is shown in the similar three tab/panel format and each of the returned data is stored in corresponding textarea in a small monospace font.</p>
+			<p>The Bloom API is a free API that let's us look up clinicians given an a query parameter such as names or addresses. It returns information such as each medical doctor's name, national provider ID, address and contact information. Some of the healthcare provider results given by Bloom API are organizations instead of individual practices. When the entity listed is an organization, the entry will have the organization's official, such as the president, rather than the name of the doctor. In this case, I request for clinics using the zip code 92618 (Irvine, CA). </p>
+			<p>The Open Weather Map API returns weather information given a location. I request for weather information for cities near Santa Ana, CA (using latitude and longitude) and give it a count parameter of 10, so that it request returns at most 10 results in this case. The count argument can be changed such that if there are most results, it will return more of them. This request returns each nearby city's name, latitude, longitude, weather information (temperature, humidity, pressure, wind direction, etc.), and extra information such as when the data was last updated.</p>
+			<p>The Best Buy Stores API provides information for nearby Best Buy stores given a location. In this case, I give the API the query parameters zip code 90804 (Long Beach, CA) and a radius of 25 miles, as well as an API key. The API responds with a number of Best Buy stores within the given area. Details such at the store's name, address, latitude, longitude, contact info, and the services available at each particular location are provided.</p>
+			<h2>Real-Time Map Description</h2>
+			<p>A new section that includes a Google Map canvas and a column of Best Buy locations is added to the page. This can be seen by clicking on the "Best Buy Map" navigation link on the right in the black navigation bar up top or scrolling to the bottom of the page. The Google map shows Best Buy locations within 25 miles of zip code 90804 (Long Beach, CA). The markers for each location are plotted in the map. A "home" location is also placed on the map, this location is denoted by the latitude-longitude pair (33.6425148, -117.84121949), which is somewhere around Donald Bren Hall. A "Center Map" button is placed above the map, it is red, clearly visible, and functional, that will center the map to Donald Bren Hall. The Center Map button centers the map by calling map.setCenter() with the location object given (33.6425148, -117.84121949). To the right of the map is a list of the retrieved Best Buy locations along with geodata and description information. Under the description heading, there is a blue button labeled with the Best Buy location's name. Clicking on the button will center and zoom the map to the respective Best Buy location on the map (zoom value = 13). Shrinking the width of the browser window/viewport will cause the Description container to collapse below the Geodata containers.</p>
+			<h3>Real-time Map Enhancement</h3>
+			<p>The additions/changes made to the default map are changes to the location marker icons and the inclusion of an info window. The Home icon is used for the center point (Bren Hall) location, it is a blue house icon. The markers of the Best Buy locations have been changed to a Best Buy logo.</p>
+			<p>Clicking on the marker icons of a location will open an info window inside the map canvas. Clicking on the home icon/DBH will open an info window that contains an embedded street view container. Inside the street view container, the user can pan around using the mouse just as in a normal street view page, although this may be difficult because the size of the street view frame is small. Clicking on the marker of a Best Buy location will open an info window containing a Google link that uses the location's name as its query and a "Directions to Here" link will which navigate to the Google Maps website showing directions from Donald Bren Hall to the Best Buy location. It also contains embedded street view object. Google Street View has footage of some locations, but not all. For some locations, only a black screen is shown in the street view object (the embedded street view API is given the latitude and longitude pair from the Best Buy Stores feed). The Best Buy - Signal Hill location has a good street view shot that defaults to the location's store front. The Best Buy - Westminster location has street view placed somewhere in the parking lot of the store center/Westminster Mall. The info windows are closed by pressing the "X" button in the upper right.</p>
+			<p>Console errors may show up when the Street View iframe is loaded, these are on Google's side.</p>
+		</div>
+
+		<div class="col-md-12">
+			<a class="anchor" id="sources"></a>
+			<h1>5 Data Sources</h1>
+			<ol>
+				<li>
+					<a href="http://www.bloomapi.com/"><strong>Bloom API</strong></a>
+					<ul>
+						<li>Bloom API let's you access data from the <acronym>NPI</acronym> (National Provider Identifier) data set.</li>
+						<li>Returns information about clinical practices given a query parameter such as NPI, name, phone number, or zip code.</li>
+						<li>The URL provided returns, in JSON format, the practice's NPI, name, address, phone number, and more. The parameters provided is the zip code 92618, a "key1" parameter saying what parameter is being provided, a limit parameter that limits the number of results to be returned to be at most 10, and an offset of 0 (which the API uses to support pagination).</li>
+						<li>JSON with proxy was used for this API</li>
+						<li><a href="http://www.bloomapi.com/api/search?limit=10&offset=0&key1=practice_address.zip&op1=eq&value1=92618">Here is the API URL used for the AJAX request.</li>
+					</ul>
+				</li>
+				<li>
+					<a href="http://openweathermap.org/api"><strong>Open Weather Map</strong></a>
+					<ul>
+						<li>The OWM API returns weather data for a given location.</li>
+						<li>
+							Display information such as:
+							<ul>
+								<li>Latitude and longitude for the given location</li>
+								<li>Wind speed and direction</li>
+								<li>Temperature</li>
+								<li>Pressure</li>
+								<li>Humidity</li>
+							</ul>
+						</li>
+						<li>XML with proxy was used for this API</li>
+						<li><a href="http://api.openweathermap.org/data/2.5/find?lat=33.7408&lon=-117.8814&cnt=10&mode=xml&units=imperial">Here is the API URL used for the request</a></li>
+						<li>I gave the API parameters latitude, longitude, count, mode, and units. The latitude and longitude provided are for Santa Ana, CA. The count is set to 10, such that the feed will return at most 10 results. The mode is set to XML, so that the API returns data in XML format. The units are set to imperial, so that I get information back in units that are more common in this part of the world.</li>
+						<li>The API request returns weather information for cities near the latitude and longitude I provided it (Santa Ana, CA) which includes Santa Ana itself. (Latitude = 33.7408, Longitude = -117.8814)</li>
+					</ul>
+				</li>
+				<li>
+					<a href="https://developer.bestbuy.com/documentation/stores-api"><strong>Best Buy Developer Stores API</strong></a>
+					<ul>
+						<li>This API returns Best Buy store information given an area.</li>
+						<li>Provides information such as address, contact info, store hours, and services available at the store</li>
+						<li>JSONP without proxy was used for this request</li>
+						<li>*Requires API Key: Limited to 5 calls/second, 50,000 calls/day. API Key:5evx33uy4jgsj7b2jpm5s4qx</li>
+						<li><a href="https://api.remix.bestbuy.com/v1/stores(area(90804,25))?format=json&apiKey=5evx33uy4jgsj7b2jpm5s4qx&callback=?">Here is the API URL I used for the request.</a></li>
+						<li>Returns Best Buy stores within a given number mile radius from a given location. In this case, the location is the ZIP code is set to 90804 and the radius is 25 miles.</li>
+					</ul>
+				</li>
+				<li>
+					<a href="http://platform.seatgeek.com/"><strong>Seatgeek</strong></a>
+					<ul>
+						<li>The Seatgeek API returns information about live events in the US and Canada</li>
+						<li>Given a location, it returns live events such as concerts that will take place in nearby areas.</li>
+						<li><a href="http://api.seatgeek.com/2/events?venue.state=CA">Here is the feed URL</a></li>
+						<li>The feed provided has a venue.state parameter that is set to CA/California, so it'll return events happening in California.</li>
+						<li>It provides information such as when the event was added to Seatgeek's service, the event's name, URL(s) to related images, the event's type (e.g. concert), address, related time and dates, price information, etc.</li>
+					</ul>
+				</li>
+				<li>
+					<a href="http://www.panoramio.com/api/data/api.html"><strong>Panoramio</strong></a>
+					<ul>
+						<li>Panoramio is a service that contains/provides geolocated photos.</li>
+						<li><a href="http://www.panoramio.com/map/get_panoramas.php?set=public&from=0&to=20&minx=-180&miny=-90&maxx=180&maxy=90&size=medium&mapfilter=true">Here is the feed URL</a></li>
+						<li>Using your browser (at least, on Chrome, on my machine) to navigate to the link will cause the returned data to be downloaded by default instead of displaying in your browser's viewport. It gets downloaded as geo_panoramas.php on my machine, but what's contained is JSON feed data.</li>
+						<li>Returns geolocated photos from the Panoramio service. API provides information such as the photo's id, title, url, and file url, latitude, longitude, width, height, update date, owner id, owner name, etc.</li>
+					</ul>
+				</li>
+				<li>
+					<a href="http://developer.factual.com/data-docs/"><strong>Factual</strong></a>
+					<ul>
+						<li>The Factual data platform provides information on global places, restaurants, hotels, healthcare providers, world geographies, product data, and more.</li>
+						<li>In this case, I retrieve data from their restaurant data set</li>
+						<li>*Requires API key, my API key is limited to 100 requests/day.</li>
+						<li>Full-text search of Factual's restaurant data set with results that contain Coffee and phrase "Los Angeles."</li>
+						<li><a href="http://api.v3.factual.com/t/restaurants-us?q=Coffee,%22Los%20Angeles%22&offset=20&limit=20&KEY=BrcaJSYY46ivAqcW5A50zNL3JEO6Ut7BBZTyJXmy">Here is the feed URL</a></li>
+						<li>The API request provided returns restaurants info where the word Coffee and the phrase "Los Angeles" associated with each of the provided restaurants</li>
+						<li>Provides info such as address, cuisine type, restaurant hours, whether it's good for kids, the neighborhoods the restaurant is local to, telephone numbers, and websites for the restaurants. Also has data such as healthy, vegetarian, parking free or not, valet, cash only or not, has reservations, smoking allowed, price rating, restaurant rating, and more.</li>
+						<li>Info available varies widely depending on the restaurant, some have more info than others.</li>
+						<li>I just noticed that I described more feeds than I needed to..</li>
+					</ul>
+				</li>
+			</ol>
+		</div>
+
+		<div class="col-md-12">
+			<a class="anchor" id="parse"></a>
+			<h1>Data Parsing</h1>
+			
+			<h2>Bloom API</h2>
+			<p>
+				The Bloom API data is displayed by iterating through the array that is in the result property of the returned JavaScript object. The did not have to parse the data manually because it's already provided in JSON format. The result property contains an array of the objects which represent each of the clinical practices. The objects have properties such as national provider ID, practice address, type, and more. Some of these properties contain objects, for example, city, state, zip, and country code are contained in practice address. Certain entry types have different data, entries with type "individual" have the doctor's name and credentials in the entry's object. However, entries with type "organization" do not have the doctor's name in the entry object, instead, they have the an official's title and name in the organization official property contained in the entry object. The data is accessed using dot notation, concatenated with appropriate labels (and line breaks), and appended to corresponding div objects created in jQuery. Three div elements for geodata, description, and extra info are created, data in each entry added to the corresponding sections, these three div elements are appended to a row element, and then that row element is appended to a corresponding results div in the DOM. Some results have an address details property, an extra address line containing info such as suite number. To avoid displaying "undefined," I checked whether this property exists before attempting to access and display it.
+			</p>
+			<p>The request is made by the requestBloom function which executes a call to $.ajax(). The success function is responseBloom and the failure function is requestFailed. The URL provided to the AJAX call is one that uses the PHP proxy which calls curl to retrieve the JSON data on the server.</p>
+			
+			<h2>Open Weather Map API</h2>
+			<p>
+				The Open Weather Map data is parsed using a library called XML2JSON which converts the retrieved XML data and converts it to a JavaScript object for easy manipulation in JavaScript. To convert, do $.xml2json([XML data here]). The weather data is displayed similarly to the way data was displayed using the Bloom API. Entry objects are contained in the list.item property of the data object. First, geodata is retrieved in the entry object's coord property, the coord property has latitude and longitude. The description data is gathered from the humidity, pressure, temperature, weather, and wind properties of the entry object. Inside each of these weather properties is a value property which contains the value associated with the property. For some weather information, a units property also exists that corresponds with the value. However, this is not provided for wind speed. Because in the API request, the units was specified to be imperial, the wind speed is in miles per hour. The extra information retrieved is the last updated date. These are added to three dynamically created divs, appended to a newly created row, which is then appended to the a results div in the page, as it has been done for the Bloom API.
+			</p>
+			<p>The AJAX request is made by requestWeather which calls $.ajax(). The success function is responseWeather and the failure function is requestFailed. The URL provided also uses the PHP proxy to retrieve the XML data server-side.</p>
+			<h2>Best Buy Stores API</h2>
+			<p>
+				The Best Buy Stores feed data did not have to be parsed manually because it was received as a JSON object through JSONP (using a callback), using $.getJSON() rather than $.ajax(). The data was displayed similarly to how it was done using the Bloom API. Entry objects are contained in the stores property of the data object. Each entry objects contains geodata such as distance, address, city, postal code, region, latitude, and longitude. The description data are the store's name, store type, hours, and phone number. The extra information are the services available at each Best Buy location. The available services are contained in the services property in the entry object. The services property contains an array which is iterated through using $(v.services).each(), which is provided with an anonymous function with 2 parameters, key and value. The value parameter contains the data associated with each service. The service's name is then added to the div for extra info. The geodata, description, and extra divs are appended to row, and then the row is added to the results div as they have been done previously for the two previous APIs.
+			</p>
+			<p>Here, the request is made using $.getJSON(). Which is a shortcut function for retrieving JSON feeds. The success function is an anonymous function provided to $.getJSON(), the failure function is requestFailed. In order to bypass caching of AJAX data (supposedly they blame Internet Explorer), jQuery silently appends an underscore parameter to the request URL with a timestamp as the value. This, however, breaks the API request for Best Buy because Best Buy's API rejects requests with parameters that it doesn't understand/specify. To get around this, I have enabled caching using $.ajaxSetup({ cache: true }). This method does not require using the proxy because JSONP bypass cross-domain restrictions and the feed is also provided over SSL/HTTPS.</p>
+		</div>
+		
+		<div class="col-md-12">
+			<a class="anchor" id="retrieved-data"></a>
+			<h1>Retrieved Data</h2>
+			<ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active"><a href="#bloomTab" role="tab" data-toggle="tab">Bloom API (JSON)</a></li>
+				<li role="presentation"><a href="#weatherTab" role="tab" data-toggle="tab">Open Weather Map (XML)</a></li>
+				<li role="presentation"><a href="#ipTab" role="tab" data-toggle="tab">Best Buy Stores API (JSONP)</a></li>
+			</ul>
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane fade in active" id="bloomTab">
+					<h2>Bloom API Results</h2>
+					<h3>Medical doctor/business and practice address near zip code 92618.</h3>
+					<div id="bloom-results" class="results"></div>
+				</div>
+				<div role="tabpanel" class="tab-pane fade" id="weatherTab">
+					<h2>Open Weather Map Results</h2>
+					<h3>Weather in cities near Santa Ana, CA (Latitude = 33.7408, Longitude = -117.8814).</h3>
+					<div id="weather-results" class="results"></div>
+				</div>
+				<div role="tabpanel" class="tab-pane fade" id="ipTab">
+					<h2>Best Buy Stores API Results</h2>
+					<h3>Best Buy stores within 25 miles of zip code 90804 (Long Beach, CA).</h3>
+					<div id="ip-results" class="results"></div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="col-md-12">
+			<a class="anchor" id="ajax"></a>
+			<h1>Dynamic AJAX Data</h1>
+			<ul class="nav nav-tabs" role="tablist">
+				<li role="presentation" class="active"><a href="#bloomDataTab" role="tab" data-toggle="tab">Bloom API (JSON)</a></li>
+				<li role="presentation"><a href="#weatherDataTab" role="tab" data-toggle="tab">Open Weather Map (XML)</a></li>
+				<li role="presentation"><a href="#ipDataTab" role="tab" data-toggle="tab">Best Buy Stores API (JSONP)</a></li>
+			</ul>
+			<div class="tab-content">
+				<div role="tabpanel" class="tab-pane fade in active" id="bloomDataTab">
+					<h2>Bloom API Data</h2>
+					<textarea id="bloom-data" class="ajax-data"></textarea>
+				</div>
+				<div role="tabpanel" class="tab-pane fade" id="weatherDataTab">
+					<h2>Open Weather Map Data</h2>
+					<textarea id="weather-data" class="ajax-data"></textarea>
+				</div>
+				<div role="tabpanel" class="tab-pane fade" id="ipDataTab">
+					<h2>Best Buy Stores API Data (From JS callback)</h2>
+					<textarea id="ip-data" class="ajax-data"></textarea>
+				</div>
+			</div>
+		</div>
+
+		<div class="col-xs-12">
+			<a class="anchor" id="map"></a>
+			<h1>Best Buy Google Map</h1>
+			<p>This map adds Best Buy store locations.
+			<button type="button" class="btn btn-danger" id="btn-centermap">Center Map (DBH, UCI)</button>
+			</p>
+			<div class="row">
+				<div class="col-xs-6">
+					<div id="map-canvas">
+						There should be a map here.
+					</div>
+				</div>
+				<div id="map-locations" class="col-xs-6 results">
+					<h4>Mapped Best Buy Store Locations (within 25 miles of 90804).</h4>
+				</div>
+			</div>
+		</div>
+
+    </div><!-- /.container -->
+    
+	<div class="footer">
+		&copy; 2014 Richard Vong
+	</div>
+	
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//maps.googleapis.com/maps/api/js?sensor=false&language=en&region=US"></script>
+    <script src="js/jquery.xml2json.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+	<script>
+		// Generic failure function for Ajax requests
+		var requestFailed = function (XMLHttpRequest, errorMsg, errorThrown) {
+			alert('Ajax request failed. See console.');
+			console.log('Ajax Request Failed');
+			console.log('------------------');
+			console.log(XMLHttpRequest);
+			console.log(errorMsg);
+			console.log(errorThrown);
+			console.log('------------------');
+		};
+		
+		// Creates url using proxy
+		var proxy = function (url) { return '/~vongr/geomap/proxy.php?' + url; };
+		
+		var escText = function (s) {
+			// also check if undefined
+			if (s === 'undefined') return 'N/A';
+		};
+
+		// Use Bloom API to get medical doctors in a given area.
+		var requestBloom = function () {
+			// ZIP = 92618 = IRVINE, CA
+			var URL = 'http://www.bloomapi.com/api/search?limit=10&offset=0&key1=practice_address.zip&op1=eq&value1=92618';
+			$.ajax({
+				url: proxy(URL),
+				dataType: 'json',
+				success: responseBloom,
+				error: requestFailed
+			});
+		};
+		
+		var responseBloom = function (data) {
+			$('#bloom-data').html(JSON.stringify(data));
+			$(data.result).each(function(k, v) {
+				var row = $('<div/>').addClass('row');
+				var geo = $('<div/>').addClass('col-md-4');
+				geo.append('<h4>Geodata</h4>');
+				geo.append('Address 1: ' + v.practice_address.address_line);
+				
+				if ('address_details_line' in v.practice_address)
+					geo.append('<br>Address Details:' + v.practice_address.address_details_line);
+				
+				geo.append('<br>City: ' + v.practice_address.city);
+				geo.append('<br>State: ' + v.practice_address.state);
+				geo.append('<br>Zip: ' + v.practice_address.zip);
+				geo.append('<br>Country: ' + v.practice_address.country_code);
+				
+				var description = $('<div/>').addClass('col-md-4');
+				description.append('<h4>Description</h4>')
+				description.append('National Provider ID: ' + v.npi);
+				
+				// Different entry types have different properties
+				if (v.type === 'individual') {
+					description.append('<br>Credential: ' + v.credential);
+					if ('name_prefix' in v) {
+						description.append('<br>Name Prefix: ' + v.name_prefix);
+					}
+					var middleName = ('middle_name' in v) ? v.middle_name : '';	// Not all data entries will have a middle name
+					description.append('<br>Full Name: ' + v.last_name + ', ' + v.first_name + ' ' + middleName);
+					description.append('<br>Gender: ' + v.gender);
+				} else if (v.type === 'organization') {
+					description.append('<br>Business Name: ' + v.business_name);
+					description.append('<br>Official Title: ' + v.organization_official.title);
+					description.append('<br>Official First Name: ' + v.organization_official.first_name);
+					description.append('<br>Official Last Name: ' + v.organization_official.last_name);
+					description.append('<br>Official Phone: ' + v.organization_official.phone);
+				}
+				
+				var extra = $('<div/>').addClass('col-md-4');
+				extra.append('<h4>Extra</h4>');
+				
+				var providerDetails = v.provider_details[0];
+				extra.append('License #:' + providerDetails.license_number);
+				extra.append('<br>Healthcare Taxonomy Code:' + providerDetails.healthcare_taxonomy_code);
+				extra.append('<br>Taxonomy Switch:' + providerDetails.taxonomy_switch);
+				extra.append('<br>Enum. Date:' + v.enumeration_date);
+				extra.append('<br>Last Update:' + v.last_update_date);
+				
+				row.append(geo).append(description).append(extra);
+				$('#bloom-results').append(row);
+			});
+		};
+
+		// Use OpenWeatherMap API to get weather in cities near Santa Ana, CA. 10 results.
+		var requestWeather = function () {
+			// OpenWeatherMap with (Lat, Lon) of Santa Ana, CA, retrieve 10 results in XML w/ imperial units
+			var URL = 'http://api.openweathermap.org/data/2.5/find?lat=33.7408&lon=-117.8814&cnt=10&mode=xml&units=imperial';
+			$.ajax({
+				url: proxy(URL),
+				dataType: 'text',
+				success: responseWeather,
+				error: requestFailed
+			});
+		};
+		
+		var responseWeather = function (data) {
+			$('#weather-data').html(data);
+			var json = $.xml2json(data);	// Use XML2JSON library to convert.
+			$(json.list.item).each(function (k, v) {
+				var row = $('<div/>').addClass('row');
+				
+				var geo = $('<div/>').addClass('col-md-4');
+				geo.append('<h4>Geodata</h4>');
+				geo.append('City Name: ' + v.city.name);
+				geo.append('<br>Latitude: ' + v.city.coord.lat);
+				geo.append('<br>Longitude: ' + v.city.coord.lon);
+				
+				var description = $('<div/>').addClass('col-md-4');
+				description.append('<h4>Description</h4>');
+				description.append('Humidity: ' + v.humidity.value + v.humidity.unit);
+				description.append('<br>Pressure: ' + v.pressure.value + ' ' + v.pressure.unit);
+				description.append('<br>Temperature: ' + v.temperature.value + ' ' + v.temperature.unit);
+				description.append('<br>Weather: ' + v.weather.value);
+				description.append('<br>Wind Direction: ' + v.wind.direction.name);
+				description.append('<br>Wind Speed: ' + v.wind.speed.value + ' mph'); // mph for imperial
+
+				var extra = $('<div/>').addClass('col-md-4');
+				extra.append('<h4>Extra</h4>');
+				extra.append('Last Updated: ' + v.lastupdate.value);
+				
+				row.append(geo).append(description).append(extra);
+				$('#weather-results').append(row);
+			});
+		};
+		
+		// Request Best Buy stores given an area (Zip Code).
+		var requestIP = function () {
+			var URL = '//api.remix.bestbuy.com/v1/stores(area(90804,25))?format=json&apiKey=5evx33uy4jgsj7b2jpm5s4qx&callback=?';
+			$.getJSON(URL, function (data) {
+				$('#ip-data').html(JSON.stringify(data));
+				$(data.stores).each(function (k, v) {
+					var row = $('<div/>').addClass('row');
+					
+					var geo = $('<div/>').addClass('col-md-4');
+					geo.append('<h4>Geodata</h4>');
+					geo.append('Distance: ' + v.distance);
+					geo.append('<br>Address: ' + v.address);
+					geo.append('<br>City: ' + v.city);
+					geo.append('<br>Postal Code: ' + v.postalCode);
+					geo.append('<br>Region: ' + v.region);
+					geo.append('<br>Country: ' + v.country);
+					geo.append('<br>Latitude: ' + v.lat);
+					geo.append('<br>Longitude: ' + v.lng);
+					
+					var description = $('<div/>').addClass('col-md-4');
+					description.append('<h4>Description</h4>');
+					description.append('Name: ' + v.longName);
+					description.append('<br>Store Type: ' + v.storeType);
+					description.append('<br>Hours: ' + v.hoursAmPm);
+					description.append('<br>Phone Number: ' + v.phone);
+					
+					var extra = $('<div/>').addClass('col-md-4');
+					extra.append('<h4>Extra</h4>');
+					$(v.services).each(function (k, v) {
+						extra.append('Service: ' + v.service + '<br>');
+					});
+
+					row.append(geo).append(description).append(extra);
+					$('#ip-results').append(row);
+
+					// Add Best Buy store marker to map
+					var thisLoc = v.lat + ',' + v.lng;
+					var marker = new google.maps.Marker({
+						map: map,
+						icon: iconBestBuy,
+						title: v.longName,
+						animation: google.maps.Animation.DROP,
+						position: new google.maps.LatLng(v.lat, v.lng),
+					});
+					
+					var fullAddress = v.longName + ', ' + v.address + ', ' + v.city + ', ' + v.region + ' ' + v.postalCode;
+					// Link to Infowindow
+					var infowindow = new google.maps.InfoWindow({
+					    content: '<div class="map-iw"><p><a href="//www.google.com/search?q='+ v.longName +'&btnI">'+v.longName+'</a> | <a href="//www.google.com/maps/dir/Donald+Bren+School+of+Information+and+Computer+Sciences,+6210+Donald+Bren+Hall,+Irvine,+CA+92697/' + fullAddress +'">Directions to Here</a></p><iframe src="//www.google.com/maps/embed/v1/streetview?key=AIzaSyCJ92qp6o0MK4Fg9W5HSXm_GvOXsWK1nQw&location=' + thisLoc + '&heading=210&pitch=10&fov=35"></iframe></div>'
+					});
+
+					google.maps.event.addListener(marker, 'click', function () {
+						infowindow.open(map, marker);
+					});
+
+					// Add Geodata/Description for each store to the right of the map
+					var row = $('<div/>').addClass('row');
+					
+					var geo = $('<div/>').addClass('col-md-6');
+					geo.append('<h4>Geodata</h4>');
+					geo.append('Distance: ' + v.distance);
+					geo.append('<br>Address: ' + v.address);
+					geo.append('<br>City: ' + v.city);
+					geo.append('<br>Postal Code: ' + v.postalCode);
+					geo.append('<br>Region: ' + v.region);
+					geo.append('<br>Country: ' + v.country);
+					geo.append('<br>Latitude: ' + v.lat);
+					geo.append('<br>Longitude: ' + v.lng);
+					
+					var description = $('<div/>').addClass('col-md-6');
+					description.append('<h4>Description</h4>');
+					description.append('<button type="button" class="btn btn-primary btn-xs" onclick="setCenterZoom(' + v.lat + ',' + v.lng + ', 13)">' + v.longName + '</button>');
+					description.append('<br>Store Type: ' + v.storeType);
+					description.append('<br>Hours: ' + v.hoursAmPm);
+					description.append('<br>Phone Number: ' + v.phone);
+					row.append(geo).append(description);
+					$('#map-locations').append(row);
+				});
+			}).fail(requestFailed);
+		};
+
+		var codeAddress = function (address) {
+			var gc = new google.maps.Geocoder();
+			gc.geocode({address: address}, function (result, status) {
+				if (status == google.maps.GeocoderStatus.OK) {
+					console.log(address);
+					console.log(result[0].geometry.location);
+				} else
+					alert('Geocode unsuccessful: ' + status);
+			});
+		};
+
+		// Center Point is somewhere around DBH
+		var centerPoint = new google.maps.LatLng(33.6425148, -117.84121949);
+
+		var iconBestBuy = {
+				url: 'images/bestbuy.ico',
+				size: new google.maps.Size(32, 32),  // This marker is 32 pixels wide by 32 pixels tall.
+				origin: new google.maps.Point(0,0),  // The origin for this image is 0,0.
+				anchor: new google.maps.Point(0, 16) // The anchor for this image is at 0,16.
+		};
+
+		var iconLUCI = {
+				url: 'images/home-icon.png',
+				size: new google.maps.Size(32,32),  // This marker is 32 pixels wide by 32 pixels tall.
+				origin: new google.maps.Point(0, 0),  // The origin for this image is 0,0.
+				anchor: new google.maps.Point(0, 0) // The anchor for this image is at 0,16.
+		};
+		var map;
+
+		function initializeMap(){
+			var myOptions = {
+				zoom: 9,
+				center: centerPoint,
+				mapTypeId: google.maps.MapTypeId.ROADMAP
+			};
+
+			map = new google.maps.Map($('#map-canvas').get(0), myOptions);
+
+			// Below: Adding Home/Center to Map
+			var contentString = '<div class="map-iw"><p>Somwhere around Donald Bren Hall</p><iframe src="https://www.google.com/maps/embed/v1/streetview?key=AIzaSyCJ92qp6o0MK4Fg9W5HSXm_GvOXsWK1nQw&location=33.643298,-117.841983&heading=210&pitch=10&fov=35"></iframe></div>';
+
+			var infowindow = new google.maps.InfoWindow({
+			    content: contentString
+			});
+
+			var centerMarker = new google.maps.Marker({
+				position: centerPoint,
+				map: map,
+				icon: iconLUCI,
+				title: 'Nearly Donald Bren Hall'
+			});
+
+			google.maps.event.addListener(centerMarker, 'click', function () {
+				infowindow.open(map, centerMarker);
+			});
+		}
+
+		var requestAll = function () {
+			requestBloom();
+			requestWeather();
+			requestIP();
+		};
+
+		var setCenterZoom = function (lat, lon, zoom) {
+			map.setCenter(new google.maps.LatLng(lat, lon));
+			map.setZoom(zoom);
+		};
+
+		$(function () {
+			// Enable cache so jQuery doesn't add underscore timestamp parameter (IE workaround)
+			// The underscore breaks the Best Buy Store API request
+			$.ajaxSetup({ cache: true });
+
+
+			requestAll();
+			initializeMap();
+
+			// Center Map Button
+			$('#btn-centermap').click(function () { map.setCenter(centerPoint); });
+		});
+	</script>
+  </body>
+</html>

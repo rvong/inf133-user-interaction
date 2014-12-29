@@ -1,0 +1,36 @@
+5 Feeds with Geolocation Data
+
+IP Telize
+Yelp
+http://www.telize.com/geoip?callback=
+Google Maps
+YouTube
+AccuWEather
+Pinterest
+FoursquareAPI
+Get geotagged photos from Flickr, some photos have GPS location data.
+
+Craigslist?
+
+Yahoo Local API
+PlaceFinder
+Bing
+http://www.webdesignerdepot.com/2011/07/40-useful-apis-for-web-designers-and-developers/
+
+Instagram
+
+
+http://www.publicapis.com/
+
+Domain Whois to Location API
+IP to location
+
+Spokeo
+REstful WHOIS
+
+Find unlimited DNS Whois Lookup API?
+Then also get City State
+
+Scrape it From Webpage
+http://www.programmableweb.com/category/all/apis?data_format=21174
+http://www.geonames.org/login

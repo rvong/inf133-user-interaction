@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>INF 133: Multitouch Assignment</title>
+	<style>
+		body {
+			font-size: 1.1em;
+			padding-left: 20%;
+			padding-right: 30%;
+			padding-bottom: 200px;
+		}
+	</style>
+	
+</head>
+
+<body>
+
+<h1>INF 133: Multitouch assignment</h1>
+<hr>
+
+<h1>Group Members</h1>
+<ol><li>Richard Vong 65674401</li></ol>
+
+<h1>Description</h1>
+<p>
+The components of this multitouch system are a computer program, multi-touch sensor, MT4J + TUIO, Community Core Vision. The "multi-touch sensor" is a cardboard box with a webcam taped in the center of the bottom of the box. The cardboard box is then capped with a touch surface. The touch surface in this case is a photo frame with a sheet of white copy paper trimmed and inserted into the slot. The user touches the glass of the photo frame. It is expected that sufficient ambient light exists, the shadows cast by the user's finger(s) are detected as blobs/touch points/gestures.
+</p>
+
+<p>
+The application gets information about multi-touch events by using the TUIO protocol and a TUIO library for Java (this is built into MT4J).
+The application is a bubble popping game built using MT4J.
+</p>
+
+<p>
+Community Core Vision provides functionality such as blob tracking and blob detection by processing grayscale images. Blob tracking uniquely identifies each blob by comparing each captured frame with preceding frames. Blob detection is the process of picking out brigh areas of a camera image and relaying them to a computer as touch gestures.
+
+MT4j is a Java framework for creating 2D and 3D applications with a focus on multi-touch input.
+https://code.google.com/p/mt4j/ 
+
+TUIO is a framework that defines a common protocol and API for multi-touch surfaces. It allows transmission of touch events and object states.
+http://www.tuio.org/
+</p>
+
+<h1>Description</h1>
+<p>
+For this project, I created a bubble popping game. The program is derived from the included PhysicsScene example in MT4J. It was modified with a background image, music/sound, and a text displaying the game score. The vertical gravity was set to a small negative value so the "bubbles" slowly float upwards. The player can pop a bubble by tapping or flicking a bubble. The flick gesture executes on either tap or flick. The multi-touch part is implemented by "zooming" a bubble. Score are displayed using a text field in the bottom left-hand corner. A popping sound is played when a bubble is popped. There are two types of bubbles, big and small. Big bubbles are popped using the Scale gesture, by pinching or expanding the bubble to a certain size the big bubble pops and spawns smaller bubbles. Small bubbles are popped by either tapping or flicking the bubble (it uses the Flick gesture in MT4J).
+</p>
+<p>
+When the game is initialized, there is just one large bubble. Popping it releases more bubbles. The game is "refilled" with more bubbles once it's determined that there are less than (35/2 integer division) bubbles left. A big bubble has a 50% chance of being added in these refills. The number of added bubbles is also (35/2 int division).
+</p>
+<p>The PhysicsScene example provided in the MT4J project was used as a base for this game.</p>
+
+<h1>Challenges</h1>
+<p>
+Setting up the environment and figuring what I was supposed to do/what was going on/wrapping my mind around the components and how they work together was the most difficult/frustrating part. I think it would've been nice to say that v0.98 preview was used in examples in the slides on the assignment page instead of only on Piazza, unless it was and I didn't see it. There seemed to be a lot of differences between v0.95 and v0.98 which made setting things up using the provided animation of the Eclipse/MT4J setup confusing.
+</p>
+<p>
+The differences between v1.2 and v1.5 CCV was also a little confusing because of the interface differences. In particular, I couldn't find a way to utilize a video as a feed instead of webcam on v1.5. Perhaps it can only be done by changing the config file? I wasn't able to get a Tuio app on Android to communicate with the Tuio server on the computer (tried different ports, disabling Windows firewall, was connected over LAN). It was very easy to get lost in the setting up part of the project.</p>
+<p>
+The assignment descriptions in the slides said that we should have our Eclipse/OS/JDK be the same architecture (all 32-bit or all 64-bit), but I don't think this was adequate information. I used up a lot of time uninstalling/reinstalling the JDK and switching between computers to try to get MT4J to run. Maybe there was a secret technique or some well-hidden set of steps to get it run under 64-bit. I wasn't able to get things working on the 64-bit JDK and ended up installing 32-bit JDK and 32-bit Eclipse.
+</p>
+<p>
+Something that I spent too much time trying to figure out was that the GESTURE_ENDED event was firing twice on the Scale event, which ended up causing a null ptr exception on the "Animation Thread" when I tried to remove an object from the game (using .destroy() or .removeChild() on the physicsContainer). I was wondering whether it was just naturally like that or was it because the gesture requires two fingers that were firing it upon each finger lifting off. It ended being because the gesture was already registered to the object. I needed to run obj.unregisterAllInputProcessors(), then everything worked fine.
+</p>
+
+<h1>Outside Resources</h1>
+<p>
+In addition to MT4J/TUIO and CCV, I used the Minim library for audio playback. It makes playing audio files like WAV, AIFF, AU, SND, and MP3 easy. The Minim website is http://code.compartmental.net/tools/minim/.
+</p>
+<p>
+A simple wrapper class for Minim by was used, taken from: https://sites.google.com/site/gmitresearch/mt4j/components
+</p>
+<p>
+For sound, I used some outside resources. The background music is taken from Puzzle Bobble by Taito Corporation. It was acquired from: http://downloads.khinsider.com/game-soundtracks/album/puzzle-bobble-pc-soundtrack/02-round-theme.mp3.
+</p>
+<p>
+Some sounds were generated using this online synth: http://www.bfxr.net/
+</p>
+<p>
+The bubble popping sound was taken from freesound.org: http://www.freesound.org/people/AlaskaRobotics/sounds/221091.
+</p>
+<p>
+For outside graphics, I used a background image from the Puzzle Bobble Universe: http://gamehall.uol.com.br/selectgame/gameplay-de-puzzle-bobble-universe/puzzle-bobble-universe-wallpaper/.
+</p>
+
+<h1>Link to video of system</h1>
+<a href="http://youtu.be/kOvsedkIRXI">http://youtu.be/kOvsedkIRXI</a>
+
+<h1>Link to source code</h1>
+<a href="source/inf133_multitouch_bubblepop.zip">Download Source</a>
+</body>
+</html>
