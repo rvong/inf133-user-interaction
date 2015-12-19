@@ -41,7 +41,7 @@ Events are registered using SensorManager.registerListener(). This uses the obse
 <p>The sensor values for accelerometer and magnetometer are copied into member variables using System.arraycopy(). getRotationMatrix() accepts parameters the variable to store rotation matrix R, var to store inclination matrix I, and set of values gravity (vector) and geomagnetic values (vector). R is the identity matrix when the device is aligned with the world's coordinate system. X axis points East, Y points to North Pole, and device faces the sky. We do not need I, so it is null. A 3x3 matrix is stored in the variable for rotation matrix R. getOrientation() accepts the rotation matrix as a parameter as well as a variable parameter to store the Azimuth, Pitch, and Roll values.
 </p>
 <p>
-This usea a 3-axis accelerometer and 3-axis magnetometer. The accelerometer measures earth's gravity (which way is down/towards the center of the earth?). The mangnetometer measures earth's magnetic field (where is magnetic north?). Both gravity and geomagnetic data are combined to calculate orientation. Further details and mathematics/equations can be seen in <em>Implementing a Tilt-Compensated
+This uses a 3-axis accelerometer and 3-axis magnetometer. The accelerometer measures earth's gravity (which way is down/towards the center of the earth?). The mangnetometer measures earth's magnetic field (where is magnetic north?). Both gravity and geomagnetic data are combined to calculate orientation. Further details and mathematics/equations can be seen in <em>Implementing a Tilt-Compensated
 eCompass using Accelerometer and
 Magnetometer Sensors</em> in the resources section of this page.
 </p>
